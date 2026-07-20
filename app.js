@@ -10,6 +10,11 @@
     document.getElementById('list').innerHTML=s.kw.slice().reverse().map(function(x,idx){
       return '<div style="padding:8px 0;border-bottom:1px solid #2a2438;display:flex;justify-content:space-between"><span><b>'+x.k+'</b> · '+x.st+'</span><button class="sec" data-i="'+idx+'" style="padding:4px 8px">삭제</button></div>';
     }).join('')||'<span class="sub">키워드 없음</span>';
+    if(!document.getElementById('clearAll')){
+      var c=document.createElement('button'); c.id='clearAll'; c.textContent='목록 비우기'; c.style.cssText='width:100%;margin-top:6px;padding:10px;border:0;border-radius:10px;background:#1c1826;color:#8a8398';
+      c.onclick=function(){if(confirm('키워드 비울까?')){s.kw=[];save(s);render();}};
+      root.appendChild(c);
+    }
     if(!document.getElementById('exp')){var b=document.createElement('button');b.id='exp';b.textContent='키워드 복사';b.style.cssText='width:100%;margin-top:8px;padding:10px;border:0;border-radius:10px;background:#1c1826;color:#ece8f1';b.onclick=function(){var text=s.kw.map(function(x){return x.k+'|'+x.st}).join('\n');if(navigator.clipboard)navigator.clipboard.writeText(text);try{legionTrack('share_peak',{})}catch(e){}};root.appendChild(b);}
     document.getElementById('add').onclick=function(){s.kw.push({k:document.getElementById('k').value||'keyword',st:document.getElementById('st').value});save(s);render();try{legionTrack('activate',{})}catch(e){}};
     document.querySelectorAll('[data-i]').forEach(function(b){b.onclick=function(){s.kw.splice(s.kw.length-1-+b.dataset.i,1);/* simpler: filter by rebuild */ 
