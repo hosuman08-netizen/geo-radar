@@ -89,3 +89,5 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   }catch(e){}})();
 
 })();
+
+/* LEGION_WAVE_24_pipe_ensure */ /* pipe already present wave 24 */
