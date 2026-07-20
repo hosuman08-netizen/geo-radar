@@ -1,3 +1,4 @@
+try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+1));}catch(e){}
 
 (function(){
   var K='geo_v1';
