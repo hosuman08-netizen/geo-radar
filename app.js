@@ -6,7 +6,7 @@
   var s=load(); var root=document.getElementById('app');
   if(!s.kw.length){ s.kw=[{k:'맥 월페이퍼',st:'신규'},{k:'사주 운세',st:'추적중'},{k:'브라우저 게임',st:'상승'}]; save(s); /*emptySeed*/ }
   function render(){
-    root.innerHTML='<div class="card"><input id="k" placeholder="키워드"/><select id="st"><option>추적중</option><option>상승</option><option>하락</option><option>신규</option></select><button id="add">추가</button></div><div class="card" id="list"></div>';
+    root.innerHTML='<div class="card"><div class="sub">키워드 '+s.kw.length+'개</div><input id="k" placeholder="키워드"/><select id="st"><option>추적중</option><option>상승</option><option>하락</option><option>신규</option></select><button id="add">추가</button></div><div class="card" id="list"></div>';
     document.getElementById('list').innerHTML=s.kw.slice().reverse().map(function(x,idx){
       return '<div style="padding:8px 0;border-bottom:1px solid #2a2438;display:flex;justify-content:space-between"><span><b>'+x.k+'</b> · '+x.st+'</span><button class="sec" data-i="'+idx+'" style="padding:4px 8px">삭제</button></div>';
     }).join('')||'<span class="sub">키워드 없음</span>';
