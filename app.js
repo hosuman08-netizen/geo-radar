@@ -4,6 +4,7 @@
   function load(){try{return JSON.parse(localStorage.getItem(K)||'{"kw":[]}');}catch(e){return{kw:[]};}}
   function save(s){localStorage.setItem(K,JSON.stringify(s));}
   var s=load(); var root=document.getElementById('app');
+  if(!s.kw.length){ s.kw=[{k:'맥 월페이퍼',st:'신규'},{k:'사주 운세',st:'추적중'},{k:'브라우저 게임',st:'상승'}]; save(s); /*emptySeed*/ }
   function render(){
     root.innerHTML='<div class="card"><input id="k" placeholder="키워드"/><select id="st"><option>추적중</option><option>상승</option><option>하락</option><option>신규</option></select><button id="add">추가</button></div><div class="card" id="list"></div>';
     document.getElementById('list').innerHTML=s.kw.slice().reverse().map(function(x,idx){
