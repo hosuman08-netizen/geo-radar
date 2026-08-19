@@ -68,6 +68,12 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
     if(cur===next && next!=='all') return 'all';
     return next;
   }
+  /* WAVE148: 재탭 후 목록 맨위. 스크롤만 · 크롤/점유율 숫자 0 */
+  function listToTop(){
+    try{ window.scrollTo(0,0); }catch(e){}
+    var el=document.getElementById('list');
+    if(el){ try{ el.scrollIntoView({block:'start'}); }catch(e){} }
+  }
   if(!s.kw.length){ s.kw=[{k:'맥 월페이퍼',st:'신규',t:Date.now(),note:'',hist:[{st:'신규',t:Date.now()}]},{k:'사주 운세',st:'추적중',t:Date.now(),note:'',hist:[{st:'추적중',t:Date.now()}]},{k:'브라우저 게임',st:'상승',t:Date.now(),note:'',hist:[{st:'상승',t:Date.now()}]}]; save(s); }
   (function(){var dirty=false;(s.kw||[]).forEach(function(x){if(!x.hist||!x.hist.length){x.hist=[{st:x.st,t:x.t||Date.now()}];dirty=true;}if(x.hist.length>14){x.hist=x.hist.slice(-14);dirty=true;}if(x.pri!=='P0'&&x.pri!=='P1'&&x.pri!=='P2'){x.pri='P2';dirty=true;}});if(dirty)save(s);})();
   function render(){
@@ -143,9 +149,12 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
     }).join(''):'<span class="sub">키워드 없음'+(filter==='pin'?' (핀 없음 · 필터 유지)':(filter==='ours'?' (ours 메모 없음 · 필터 유지)':(filter==='comp'?' (comp 메모 없음 · 필터 유지)':(filter!=='all'?' (필터: '+filter+')':''))))+'</span>';
     Array.prototype.forEach.call(document.querySelectorAll('[data-f]'),function(b){
       b.onclick=function(){
-        filter=chipRetap(filter, b.getAttribute('data-f'));
+        var next=b.getAttribute('data-f');
+        var retap=(filter===next && next!=='all');
+        filter=chipRetap(filter, next);
         localStorage.setItem('geo_filter',filter);
         render();
+        if(retap) listToTop();
       };
     });
     if(!document.getElementById('clearAll')){
