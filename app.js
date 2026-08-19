@@ -81,8 +81,8 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       return (b.t||0)-(a.t||0);
     });
     root.innerHTML='<div class="card"><div class="sub">키워드 '+s.kw.length+'개 · 🔥'+sc+'일 · 창 '+fomoLeft()
-      +' · ↑'+(h['상승']||0)+' ↓'+(h['하락']||0)+' 신규'+(h['신규']||0)+' · 핀 '+pn.length+' · P0 '+p0n+' · 스파크=수동상태(크롤0)</div>'
-      +'<div class="sub" style="margin:4px 0 0">핀·P0 상단 · 중요도 수동 · 볼륨/랭크 숫자 없음</div>'
+      +' · ↑'+(h['상승']||0)+' ↓'+(h['하락']||0)+' 신규'+(h['신규']||0)+' · 핀 '+pn.length+' · P0 '+p0n+' · ours '+oursN+' · comp '+compN+' · 스파크=수동상태(크롤0)</div>'
+      +'<div class="sub" style="margin:4px 0 0">핀·P0 상단 · ours '+oursN+' · comp '+compN+' · 메모 유무만 · 점유율/랭크 숫자 없음</div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin:8px 0">'
       +['all','pin','ours','comp','신규','추적중','상승','하락'].map(function(f){
         var lab=f==='all'?'전체':f==='pin'?'핀 '+pn.length:f==='ours'?'ours '+oursN:f==='comp'?'comp '+compN:f;
@@ -206,14 +206,14 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       inp.onchange=function(){
         var item=s.kw[+inp.getAttribute('data-ours')]; if(!item)return;
         item.ours=clipMemo(inp.value);
-        save(s);
+        save(s); render();
       };
     });
     Array.prototype.forEach.call(document.querySelectorAll('[data-comp]'),function(inp){
       inp.onchange=function(){
         var item=s.kw[+inp.getAttribute('data-comp')]; if(!item)return;
         item.comp=clipMemo(inp.value);
-        save(s);
+        save(s); render();
       };
     });
     document.querySelectorAll('[data-i]').forEach(function(b){b.onclick=function(){
