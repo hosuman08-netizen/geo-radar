@@ -53,7 +53,9 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   function priOf(x){return (x.pri==='P0'||x.pri==='P1'||x.pri==='P2')?x.pri:'P2';}
   function priRank(p){return p==='P0'?0:p==='P1'?1:2;}
   var s=load(); var root=document.getElementById('app');
-  var FILTERS=['all','pin','신규','추적중','상승','하락'];
+  /* WAVE104: ours/comp 필터칩. 메모 유무만 · 크롤/점유율 숫자 0 */
+  function hasMemo(v){return !!String(v||'').replace(/^\s+|\s+$/g,'');}
+  var FILTERS=['all','pin','ours','comp','신규','추적중','상승','하락'];
   var filter=localStorage.getItem('geo_filter')||'all';
   if(FILTERS.indexOf(filter)<0) filter='all';
   if(!s.kw.length){ s.kw=[{k:'맥 월페이퍼',st:'신규',t:Date.now(),note:'',hist:[{st:'신규',t:Date.now()}]},{k:'사주 운세',st:'추적중',t:Date.now(),note:'',hist:[{st:'추적중',t:Date.now()}]},{k:'브라우저 게임',st:'상승',t:Date.now(),note:'',hist:[{st:'상승',t:Date.now()}]}]; save(s); }
@@ -63,9 +65,13 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
     var h=heat(s);
     var pn=pins();
     var p0n=s.kw.filter(function(x){return priOf(x)==='P0';}).length;
+    var oursN=(s.kw||[]).filter(function(x){return hasMemo(x.ours);}).length;
+    var compN=(s.kw||[]).filter(function(x){return hasMemo(x.comp);}).length;
     var list=s.kw.slice().filter(function(x){
       if(filter==='all') return true;
       if(filter==='pin') return pn.indexOf(x.k)>=0;
+      if(filter==='ours') return hasMemo(x.ours);
+      if(filter==='comp') return hasMemo(x.comp);
       return x.st===filter;
     }).sort(function(a,b){
       var ap=pn.indexOf(a.k)>=0?0:1, bp=pn.indexOf(b.k)>=0?0:1;
@@ -78,8 +84,8 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       +' · ↑'+(h['상승']||0)+' ↓'+(h['하락']||0)+' 신규'+(h['신규']||0)+' · 핀 '+pn.length+' · P0 '+p0n+' · 스파크=수동상태(크롤0)</div>'
       +'<div class="sub" style="margin:4px 0 0">핀·P0 상단 · 중요도 수동 · 볼륨/랭크 숫자 없음</div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin:8px 0">'
-      +['all','pin','신규','추적중','상승','하락'].map(function(f){
-        var lab=f==='all'?'전체':f==='pin'?'핀 '+pn.length:f;
+      +['all','pin','ours','comp','신규','추적중','상승','하락'].map(function(f){
+        var lab=f==='all'?'전체':f==='pin'?'핀 '+pn.length:f==='ours'?'ours '+oursN:f==='comp'?'comp '+compN:f;
         return '<button class="sec" data-f="'+f+'" style="padding:6px 8px;font-size:12px'+(filter===f?';border-color:#e0b552':'')+'">'+lab+'</button>';
       }).join('')+'</div>'
       +'<input id="k" placeholder="키워드"/><select id="st"><option>추적중</option><option>상승</option><option>하락</option><option>신규</option></select>'
@@ -120,7 +126,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
           :'<span class="sub">상태 7칸 · 탭=라벨</span>')
         +'</div>'
         +'</div>';
-    }).join(''):'<span class="sub">키워드 없음'+(filter==='pin'?' (핀 없음 · 필터 유지)':(filter!=='all'?' (필터: '+filter+')':''))+'</span>';
+    }).join(''):'<span class="sub">키워드 없음'+(filter==='pin'?' (핀 없음 · 필터 유지)':(filter==='ours'?' (ours 메모 없음 · 필터 유지)':(filter==='comp'?' (comp 메모 없음 · 필터 유지)':(filter!=='all'?' (필터: '+filter+')':''))))+'</span>';
     Array.prototype.forEach.call(document.querySelectorAll('[data-f]'),function(b){
       b.onclick=function(){filter=b.getAttribute('data-f'); localStorage.setItem('geo_filter',filter); render();};
     });
