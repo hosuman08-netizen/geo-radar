@@ -23,18 +23,45 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
     (s.kw||[]).forEach(function(x){ if(h[x.st]!=null) h[x.st]++; else h[x.st]=1; });
     return h;
   }
+  /* GOLD50 TOP1: 상태 히스토리 스파크. 로컬 {st,t}만 · 크롤/랭크 숫자 0 */
+  var sparkOpen=-1;
+  function toneOf(st){return st==='상승'?'#4ade80':st==='하락'?'#f87171':st==='신규'?'#67e8f9':'#8a8398';}
+  function barH(st){return st==='상승'?22:st==='추적중'?14:st==='신규'?10:6;}
+  function ensureHist(x){
+    if(!x.hist||!x.hist.length) x.hist=[{st:x.st,t:x.t||Date.now()}];
+    if(x.hist.length>14) x.hist=x.hist.slice(-14);
+    return x.hist;
+  }
+  function pushHist(x, prev){
+    if(!x.hist) x.hist=[];
+    if(!x.hist.length) x.hist.push({st:prev!=null?prev:x.st,t:x.t||Date.now()});
+    var last=x.hist[x.hist.length-1];
+    if(!last||last.st!==x.st) x.hist.push({st:x.st,t:Date.now()});
+    if(x.hist.length>14) x.hist=x.hist.slice(-14);
+  }
+  function sparkBars(x){
+    var h=ensureHist(x).slice(-7);
+    var html='';
+    for(var i=0;i<7-h.length;i++) html+='<i style="display:inline-block;width:6px;height:4px;background:#2a2438;border-radius:1px;margin:0 1px"></i>';
+    h.forEach(function(p){
+      html+='<i title="'+p.st+'" style="display:inline-block;width:6px;height:'+barH(p.st)+'px;background:'+toneOf(p.st)+';border-radius:1px;margin:0 1px"></i>';
+    });
+    return '<span style="display:inline-flex;align-items:flex-end;height:22px" title="수동 상태 · 실측 랭크/크롤 아님">'+html+'</span>';
+  }
   function pins(){try{return JSON.parse(localStorage.getItem('geo_pins')||'[]');}catch(e){return[];}}
   function savePins(p){try{localStorage.setItem('geo_pins',JSON.stringify(p.slice(0,10)));}catch(e){}}
   var s=load(); var root=document.getElementById('app');
   var filter=localStorage.getItem('geo_filter')||'all';
-  if(!s.kw.length){ s.kw=[{k:'맥 월페이퍼',st:'신규',t:Date.now(),note:''},{k:'사주 운세',st:'추적중',t:Date.now(),note:''},{k:'브라우저 게임',st:'상승',t:Date.now(),note:''}]; save(s); }
+  if(!s.kw.length){ s.kw=[{k:'맥 월페이퍼',st:'신규',t:Date.now(),note:'',hist:[{st:'신규',t:Date.now()}]},{k:'사주 운세',st:'추적중',t:Date.now(),note:'',hist:[{st:'추적중',t:Date.now()}]},{k:'브라우저 게임',st:'상승',t:Date.now(),note:'',hist:[{st:'상승',t:Date.now()}]}]; save(s); }
+  (function(){var dirty=false;(s.kw||[]).forEach(function(x){if(!x.hist||!x.hist.length){x.hist=[{st:x.st,t:x.t||Date.now()}];dirty=true;}if(x.hist.length>14){x.hist=x.hist.slice(-14);dirty=true;}});if(dirty)save(s);})();
   function render(){
     var sc=0;try{sc=(JSON.parse(localStorage.getItem('geo_streak')||'{}').count)||0}catch(e){}
     var h=heat(s);
     var pn=pins();
     var list=s.kw.slice().reverse().filter(function(x){return filter==='all'||x.st===filter;});
     root.innerHTML='<div class="card"><div class="sub">키워드 '+s.kw.length+'개 · 🔥'+sc+'일 · 창 '+fomoLeft()
-      +' · ↑'+(h['상승']||0)+' ↓'+(h['하락']||0)+' 신규'+(h['신규']||0)+' · 핀 '+pn.length+'</div>'
+      +' · ↑'+(h['상승']||0)+' ↓'+(h['하락']||0)+' 신규'+(h['신규']||0)+' · 핀 '+pn.length+' · 스파크=수동상태(크롤0)</div>'
+      +'<div class="sub" style="margin:4px 0 0">녹↑ 적↓ 청신규 회추적 · 숫자 랭크 없음</div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin:8px 0">'
       +['all','신규','추적중','상승','하락'].map(function(f){
         return '<button class="sec" data-f="'+f+'" style="padding:6px 8px;font-size:12px'+(filter===f?';border-color:#e0b552':'')+'">'+(f==='all'?'전체':f)+'</button>';
@@ -56,6 +83,12 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
         +'<button class="sec" data-cycle="'+real+'" style="padding:4px 8px;margin-right:4px">상태</button>'
         +'<button class="sec" data-i="'+real+'" style="padding:4px 8px">삭제</button></span></div>'
         +(x.note?'<div class="sub" style="margin-top:4px">'+String(x.note).replace(/</g,'&lt;')+'</div>':'')
+        +'<div data-spark="'+real+'" style="margin-top:6px;cursor:pointer;display:flex;align-items:flex-end;gap:8px;min-height:24px">'
+        +sparkBars(x)
+        +(sparkOpen===real
+          ?'<span class="sub">'+ensureHist(x).slice(-7).map(function(p){return '<span style="color:'+toneOf(p.st)+'">'+p.st+'</span>';}).join(' → ')+'</span>'
+          :'<span class="sub">상태 7칸 · 탭=라벨</span>')
+        +'</div>'
         +'</div>';
     }).join(''):'<span class="sub">키워드 없음'+(filter!=='all'?' (필터: '+filter+')':'')+'</span>';
     Array.prototype.forEach.call(document.querySelectorAll('[data-f]'),function(b){
@@ -87,21 +120,24 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
         if(!raw)return;
         raw.split('\n').forEach(function(line){
           var p=line.split('|'); if(!p[0])return;
-          s.kw.push({k:p[0].trim(),st:(p[1]||'추적중').trim(),note:(p[2]||'').trim(),t:Date.now()});
+          var st0=(p[1]||'추적중').trim(); var t0=Date.now();
+          s.kw.push({k:p[0].trim(),st:st0,note:(p[2]||'').trim(),t:t0,hist:[{st:st0,t:t0}]});
         });
         save(s); bumpStreak(); render(); try{legionTrack('activate',{import:1})}catch(e){}
       };
       root.appendChild(ib);
     }
     document.getElementById('add').onclick=function(){
-      s.kw.push({k:document.getElementById('k').value||'keyword',st:document.getElementById('st').value,note:document.getElementById('note').value||'',t:Date.now()});
+      var stA=document.getElementById('st').value, tA=Date.now();
+      s.kw.push({k:document.getElementById('k').value||'keyword',st:stA,note:document.getElementById('note').value||'',t:tA,hist:[{st:stA,t:tA}]});
       save(s); bumpStreak(); render(); try{legionTrack('activate',{})}catch(e){}
     };
     var order=['신규','추적중','상승','하락'];
     document.querySelectorAll('[data-cycle]').forEach(function(b){
       b.onclick=function(){
         var ix=+b.dataset.cycle; var item=s.kw[ix]; if(!item)return;
-        var oi=order.indexOf(item.st); item.st=order[(oi+1)%order.length]; item.t=Date.now();
+        var prev=item.st; var oi=order.indexOf(item.st); item.st=order[(oi+1)%order.length]; item.t=Date.now();
+        pushHist(item, prev);
         save(s); bumpStreak(); render();
         try{legionTrack('status_cycle',{st:item.st})}catch(e){}
       };
@@ -115,8 +151,15 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       };
     });
     document.querySelectorAll('[data-i]').forEach(function(b){b.onclick=function(){
-      s.kw.splice(+b.dataset.i,1); save(s);render();
+      var ix=+b.dataset.i; s.kw.splice(ix,1); if(sparkOpen===ix) sparkOpen=-1; save(s);render();
     };});
+    Array.prototype.forEach.call(document.querySelectorAll('[data-spark]'),function(el){
+      el.onclick=function(){
+        var i=+el.getAttribute('data-spark');
+        sparkOpen=sparkOpen===i?-1:i;
+        render();
+      };
+    });
   }
   try{legionTrack('session_start',{})}catch(e){}
   render();
