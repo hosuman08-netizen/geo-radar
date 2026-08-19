@@ -80,6 +80,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   /* WAVE169: 플래시 줄 탭=플래시 끄기. 맨위 유지 다음 · 크롤/점유율 숫자 0 */
   /* WAVE173: 끈 뒤 목록 포커스. 포커스만 · 크롤/점유율 숫자 0 */
   /* WAVE178: 목록 포커스 링. 링만 · 크롤/점유율 숫자 0 */
+  /* WAVE183: 링 탭=링 끄기. 링만 · 크롤/점유율 숫자 0 */
   var listFlashOn=false;
   var listFlashTok=0;
   var listFlashRetr=false;
@@ -90,25 +91,65 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   }
   function listFocusId(){ return 'list'; }
   var listRingTok=0;
+  var listRingOn=false;
   function listFocusRingMs(){ return 400; }
+  function listRingIsOn(){
+    if(listRingOn) return true;
+    var el=typeof document!=='undefined'?document.getElementById(listFocusId()):null;
+    return !!(el && el.getAttribute && el.getAttribute('data-focus-ring')==='1');
+  }
   function clearListFocusRing(){
     var el=typeof document!=='undefined'?document.getElementById(listFocusId()):null;
     if(!el) return;
     el.style.outline='';
     el.style.outlineOffset='';
     el.style.boxShadow='';
-    if(el.setAttribute) el.setAttribute('data-focus-ring','0');
+    if(el.setAttribute){
+      el.setAttribute('data-focus-ring','0');
+      el.setAttribute('data-re-ring','0');
+    }
+  }
+  function killListFocusRing(){
+    listRingTok++;
+    listRingOn=false;
+    clearListFocusRing();
+    var e=typeof document!=='undefined'?document.getElementById(listFocusId()):null;
+    if(e && e.setAttribute){
+      e.setAttribute('data-ring-off','1');
+      e.setAttribute('data-ring-tap','1');
+    }
+  }
+  function bindListRingTap(){
+    var el=typeof document!=='undefined'?document.getElementById(listFocusId()):null;
+    if(!el) return false;
+    if(el.setAttribute){
+      el.setAttribute('data-ring-tap','1');
+      if(el.getAttribute('data-ring-off')!=='1') el.setAttribute('data-ring-off','0');
+    }
+    el.style.cursor=listRingOn?'pointer':'';
+    el.onclick=function(){
+      if(!listRingIsOn()) return;
+      killListFocusRing();
+    };
+    return true;
   }
   function armListFocusRing(){
     var el=typeof document!=='undefined'?document.getElementById(listFocusId()):null;
     if(!el) return false;
+    listRingOn=true;
     el.style.outline='2px solid #67e8f9';
     el.style.outlineOffset='2px';
     el.style.boxShadow='0 0 0 4px #67e8f955';
-    if(el.setAttribute) el.setAttribute('data-focus-ring','1');
+    if(el.setAttribute){
+      el.setAttribute('data-focus-ring','1');
+      el.setAttribute('data-ring-off','0');
+      el.setAttribute('data-ring-tap','1');
+    }
+    bindListRingTap();
     var tok=++listRingTok;
     setTimeout(function(){
       if(tok!==listRingTok) return;
+      listRingOn=false;
       clearListFocusRing();
     }, listFocusRingMs());
     return true;
@@ -243,6 +284,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       };
     });
     bindListFlashTap();
+    bindListRingTap();
     if(!document.getElementById('clearAll')){
       var c=document.createElement('button'); c.id='clearAll'; c.textContent='목록 비우기'; c.style.cssText='width:100%;margin-top:6px;padding:10px;border:0;border-radius:10px;background:#1c1826;color:#8a8398';
       c.onclick=function(){if(confirm('키워드 비울까?')){s.kw=[];save(s);render();}};
