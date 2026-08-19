@@ -77,6 +77,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   /* WAVE155: 맨위 플래시 1줄. 스크롤 확인만 · 크롤/점유율 숫자 0 */
   /* WAVE158: 플래시 중 재탭=재플래시. 700ms 재시작 · 크롤/점유율 숫자 0 */
   /* WAVE164: 플래시 줄 탭=맨위 유지. 스크롤만 · 크롤/점유율 숫자 0 */
+  /* WAVE169: 플래시 줄 탭=플래시 끄기. 맨위 유지 다음 · 크롤/점유율 숫자 0 */
   var listFlashOn=false;
   var listFlashTok=0;
   var listFlashRetr=false;
@@ -85,11 +86,24 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   function listFlashCss(){
     return 'margin:0 0 8px;padding:6px 8px;border-radius:8px;border:1px solid #e0b552;color:#e0b552;font-size:12px;cursor:pointer';
   }
+  function killListFlash(){
+    listFlashTok++;
+    listFlashOn=false;
+    listFlashRetr=false;
+    var e=typeof document!=='undefined'?document.getElementById('listFlash'):null;
+    if(e){
+      e.style.display='none';
+      e.setAttribute('data-flash','0');
+      e.setAttribute('data-reflash','0');
+      e.setAttribute('data-flash-off','1');
+    }
+  }
   function bindListFlashTap(){
     var el=typeof document!=='undefined'?document.getElementById('listFlash'):null;
     if(!el) return false;
     el.setAttribute('data-flash-tap','1');
-    el.onclick=function(){ listToTop(); };
+    if(el.getAttribute('data-flash-off')!=='1') el.setAttribute('data-flash-off','0');
+    el.onclick=function(){ killListFlash(); };
     return true;
   }
   function listFlashIsOn(){ return !!listFlashOn; }
@@ -142,7 +156,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       +'<input id="k" placeholder="키워드"/><select id="st"><option>추적중</option><option>상승</option><option>하락</option><option>신규</option></select>'
       +'<input id="note" placeholder="메모 (선택)"/>'
       +'<button id="add">추가</button></div><div class="card" id="list"></div>';
-    var flashHtml=listFlashOn?'<p class="sub" id="listFlash" data-flash="1" data-reflash="'+(listFlashRetr?'1':'0')+'" data-flash-tap="1" style="'+listFlashCss()+'">'+listFlashLine()+'</p>':'';
+    var flashHtml=listFlashOn?'<p class="sub" id="listFlash" data-flash="1" data-reflash="'+(listFlashRetr?'1':'0')+'" data-flash-tap="1" data-flash-off="0" style="'+listFlashCss()+'">'+listFlashLine()+'</p>':'';
     document.getElementById('list').innerHTML=flashHtml+(list.length?list.map(function(x){
       var real=s.kw.indexOf(x);
       var tone=x.st==='상승'?'#4ade80':x.st==='하락'?'#f87171':x.st==='신규'?'#67e8f9':'#ece8f1';
