@@ -81,6 +81,8 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   /* WAVE173: 끈 뒤 목록 포커스. 포커스만 · 크롤/점유율 숫자 0 */
   /* WAVE178: 목록 포커스 링. 링만 · 크롤/점유율 숫자 0 */
   /* WAVE183: 링 탭=링 끄기. 링만 · 크롤/점유율 숫자 0 */
+  /* WAVE188: 끈 뒤 목록 포커스 유지. 포커스만 · 크롤/점유율 숫자 0 */
+  /* WAVE192: 포커스 링 재탭=재시작 분리. 링만 · 크롤/점유율 숫자 0 */
   var listFlashOn=false;
   var listFlashTok=0;
   var listFlashRetr=false;
@@ -117,6 +119,16 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
     if(el.setAttribute) el.setAttribute('data-focus-after-kill','1');
     return true;
   }
+  function restartListRingFromFocus(){
+    var el=typeof document!=='undefined'?document.getElementById(listFocusId()):null;
+    if(!el || !el.getAttribute || el.getAttribute('data-focus-after-kill')!=='1') return false;
+    armListFocusRing();
+    if(el.setAttribute){
+      el.setAttribute('data-re-ring','1');
+      el.setAttribute('data-re-from-focus','1');
+    }
+    return true;
+  }
   function killListFocusRing(){
     listRingTok++;
     listRingOn=false;
@@ -137,8 +149,11 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
     }
     el.style.cursor=listRingOn?'pointer':'';
     el.onclick=function(){
-      if(!listRingIsOn()) return;
-      killListFocusRing();
+      if(listRingIsOn()){ killListFocusRing(); return; }
+      if(el.getAttribute && el.getAttribute('data-focus-after-kill')==='1'){
+        restartListRingFromFocus();
+        return;
+      }
     };
     return true;
   }
@@ -153,6 +168,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       el.setAttribute('data-focus-ring','1');
       el.setAttribute('data-ring-off','0');
       el.setAttribute('data-ring-tap','1');
+      el.setAttribute('data-focus-after-kill','0');
     }
     bindListRingTap();
     var tok=++listRingTok;
