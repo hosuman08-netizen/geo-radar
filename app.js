@@ -100,6 +100,11 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
         +'<button class="sec" data-cycle="'+real+'" style="padding:4px 8px;margin-right:4px">상태</button>'
         +'<button class="sec" data-i="'+real+'" style="padding:4px 8px">삭제</button></span></div>'
         +(x.note?'<div class="sub" style="margin-top:4px">'+String(x.note).replace(/</g,'&lt;')+'</div>':'')
+        +'<div class="row" style="gap:4px;margin-top:6px">'
+        +'<input data-ours="'+real+'" placeholder="ours 메모" value="'+String(x.ours||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')+'" style="flex:1;margin:0;padding:6px;font-size:11px"/>'
+        +'<input data-comp="'+real+'" placeholder="comp 메모" value="'+String(x.comp||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')+'" style="flex:1;margin:0;padding:6px;font-size:11px"/>'
+        +'</div>'
+        +'<div class="sub" style="margin:2px 0 0">ours|comp 메모만 · 점유율/랭크 숫자 없음</div>'
         +'<div class="row" style="flex-wrap:wrap;gap:4px;margin-top:6px">'+['P0','P1','P2'].map(function(p){
           var on=priOf(x)===p;
           return '<button type="button" class="sec" data-pri="'+real+'" data-pv="'+p+'" style="padding:4px 8px;font-size:11px;border-radius:999px'+(on?';border-color:#e0b552;color:#e0b552':'')+'">'+p+'</button>';
@@ -188,6 +193,21 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
         var p=pins(); var ix=p.indexOf(item.k);
         if(ix>=0) p.splice(ix,1); else p.unshift(item.k);
         savePins(p); render(); try{legionTrack('pin',{})}catch(e){}
+      };
+    });
+    function clipMemo(v){return String(v||'').replace(/^\s+|\s+$/g,'').slice(0,80);}
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ours]'),function(inp){
+      inp.onchange=function(){
+        var item=s.kw[+inp.getAttribute('data-ours')]; if(!item)return;
+        item.ours=clipMemo(inp.value);
+        save(s);
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-comp]'),function(inp){
+      inp.onchange=function(){
+        var item=s.kw[+inp.getAttribute('data-comp')]; if(!item)return;
+        item.comp=clipMemo(inp.value);
+        save(s);
       };
     });
     document.querySelectorAll('[data-i]').forEach(function(b){b.onclick=function(){
