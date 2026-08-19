@@ -58,6 +58,10 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   var FILTERS=['all','pin','ours','comp','신규','추적중','상승','하락'];
   var filter=localStorage.getItem('geo_filter')||'all';
   if(FILTERS.indexOf(filter)<0) filter='all';
+  /* WAVE131: 헤더 칩 탭=필터. 메모 유무만 · 크롤/점유율 숫자 0 */
+  function hdrChip(f, lab, on){
+    return '<button type="button" class="sec" data-f="'+f+'" style="padding:4px 8px;font-size:11px;border-radius:999px'+(on?';border-color:#e0b552;color:#e0b552':'')+'">'+lab+'</button>';
+  }
   if(!s.kw.length){ s.kw=[{k:'맥 월페이퍼',st:'신규',t:Date.now(),note:'',hist:[{st:'신규',t:Date.now()}]},{k:'사주 운세',st:'추적중',t:Date.now(),note:'',hist:[{st:'추적중',t:Date.now()}]},{k:'브라우저 게임',st:'상승',t:Date.now(),note:'',hist:[{st:'상승',t:Date.now()}]}]; save(s); }
   (function(){var dirty=false;(s.kw||[]).forEach(function(x){if(!x.hist||!x.hist.length){x.hist=[{st:x.st,t:x.t||Date.now()}];dirty=true;}if(x.hist.length>14){x.hist=x.hist.slice(-14);dirty=true;}if(x.pri!=='P0'&&x.pri!=='P1'&&x.pri!=='P2'){x.pri='P2';dirty=true;}});if(dirty)save(s);})();
   function render(){
@@ -81,8 +85,12 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       return (b.t||0)-(a.t||0);
     });
     root.innerHTML='<div class="card"><div class="sub">키워드 '+s.kw.length+'개 · 🔥'+sc+'일 · 창 '+fomoLeft()
-      +' · ↑'+(h['상승']||0)+' ↓'+(h['하락']||0)+' 신규'+(h['신규']||0)+' · 핀 '+pn.length+' · P0 '+p0n+' · ours '+oursN+' · comp '+compN+' · 스파크=수동상태(크롤0)</div>'
-      +'<div class="sub" style="margin:4px 0 0">핀·P0 상단 · ours '+oursN+' · comp '+compN+' · 메모 유무만 · 점유율/랭크 숫자 없음</div>'
+      +' · ↑'+(h['상승']||0)+' ↓'+(h['하락']||0)+' 신규'+(h['신규']||0)+' · P0 '+p0n+' · 스파크=수동상태(크롤0)</div>'
+      +'<div class="row" id="hdrChips" style="flex-wrap:wrap;gap:4px;margin:6px 0 0">'
+      +hdrChip('pin','핀 '+pn.length,filter==='pin')
+      +hdrChip('ours','ours '+oursN,filter==='ours')
+      +hdrChip('comp','comp '+compN,filter==='comp')
+      +'<span class="sub" style="margin:0">헤더칩=필터 · 점유율/랭크 숫자 없음</span></div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin:8px 0">'
       +['all','pin','ours','comp','신규','추적중','상승','하락'].map(function(f){
         var lab=f==='all'?'전체':f==='pin'?'핀 '+pn.length:f==='ours'?'ours '+oursN:f==='comp'?'comp '+compN:f;
