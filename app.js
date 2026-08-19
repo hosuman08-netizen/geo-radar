@@ -97,6 +97,10 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
           var on=priOf(x)===p;
           return '<button type="button" class="sec" data-pri="'+real+'" data-pv="'+p+'" style="padding:4px 8px;font-size:11px;border-radius:999px'+(on?';border-color:#e0b552;color:#e0b552':'')+'">'+p+'</button>';
         }).join('')+'</div>'
+        +'<div class="row" style="flex-wrap:wrap;gap:4px;margin-top:4px">'+['웹','AIO','Chat','네이버'].map(function(e){
+          var on=(x.eng||'웹')===e;
+          return '<button type="button" class="sec" data-eng="'+real+'" data-ev="'+e+'" style="padding:4px 8px;font-size:11px;border-radius:999px'+(on?';border-color:#67e8f9;color:#67e8f9':'')+'">'+e+'</button>';
+        }).join('')+'</div>'
         +'<div data-spark="'+real+'" style="margin-top:6px;cursor:pointer;display:flex;align-items:flex-end;gap:8px;min-height:24px">'
         +sparkBars(x)
         +(sparkOpen===real
@@ -162,6 +166,13 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
         item.pri=b.getAttribute('data-pv');
         save(s); render();
         try{legionTrack('pri',{pri:item.pri})}catch(e){}
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-eng]'),function(b){
+      b.onclick=function(){
+        var item=s.kw[+b.getAttribute('data-eng')]; if(!item)return;
+        item.eng=b.getAttribute('data-ev')||'웹';
+        save(s); render();
       };
     });
     document.querySelectorAll('[data-pin]').forEach(function(b){
