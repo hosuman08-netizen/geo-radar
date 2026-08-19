@@ -50,18 +50,27 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   }
   function pins(){try{return JSON.parse(localStorage.getItem('geo_pins')||'[]');}catch(e){return[];}}
   function savePins(p){try{localStorage.setItem('geo_pins',JSON.stringify(p.slice(0,10)));}catch(e){}}
+  function priOf(x){return (x.pri==='P0'||x.pri==='P1'||x.pri==='P2')?x.pri:'P2';}
+  function priRank(p){return p==='P0'?0:p==='P1'?1:2;}
   var s=load(); var root=document.getElementById('app');
   var filter=localStorage.getItem('geo_filter')||'all';
   if(!s.kw.length){ s.kw=[{k:'맥 월페이퍼',st:'신규',t:Date.now(),note:'',hist:[{st:'신규',t:Date.now()}]},{k:'사주 운세',st:'추적중',t:Date.now(),note:'',hist:[{st:'추적중',t:Date.now()}]},{k:'브라우저 게임',st:'상승',t:Date.now(),note:'',hist:[{st:'상승',t:Date.now()}]}]; save(s); }
-  (function(){var dirty=false;(s.kw||[]).forEach(function(x){if(!x.hist||!x.hist.length){x.hist=[{st:x.st,t:x.t||Date.now()}];dirty=true;}if(x.hist.length>14){x.hist=x.hist.slice(-14);dirty=true;}});if(dirty)save(s);})();
+  (function(){var dirty=false;(s.kw||[]).forEach(function(x){if(!x.hist||!x.hist.length){x.hist=[{st:x.st,t:x.t||Date.now()}];dirty=true;}if(x.hist.length>14){x.hist=x.hist.slice(-14);dirty=true;}if(x.pri!=='P0'&&x.pri!=='P1'&&x.pri!=='P2'){x.pri='P2';dirty=true;}});if(dirty)save(s);})();
   function render(){
     var sc=0;try{sc=(JSON.parse(localStorage.getItem('geo_streak')||'{}').count)||0}catch(e){}
     var h=heat(s);
     var pn=pins();
-    var list=s.kw.slice().reverse().filter(function(x){return filter==='all'||x.st===filter;});
+    var p0n=s.kw.filter(function(x){return priOf(x)==='P0';}).length;
+    var list=s.kw.slice().filter(function(x){return filter==='all'||x.st===filter;}).sort(function(a,b){
+      var ap=pn.indexOf(a.k)>=0?0:1, bp=pn.indexOf(b.k)>=0?0:1;
+      if(ap!==bp) return ap-bp;
+      var ar=priRank(priOf(a)), br=priRank(priOf(b));
+      if(ar!==br) return ar-br;
+      return (b.t||0)-(a.t||0);
+    });
     root.innerHTML='<div class="card"><div class="sub">키워드 '+s.kw.length+'개 · 🔥'+sc+'일 · 창 '+fomoLeft()
-      +' · ↑'+(h['상승']||0)+' ↓'+(h['하락']||0)+' 신규'+(h['신규']||0)+' · 핀 '+pn.length+' · 스파크=수동상태(크롤0)</div>'
-      +'<div class="sub" style="margin:4px 0 0">녹↑ 적↓ 청신규 회추적 · 숫자 랭크 없음</div>'
+      +' · ↑'+(h['상승']||0)+' ↓'+(h['하락']||0)+' 신규'+(h['신규']||0)+' · 핀 '+pn.length+' · P0 '+p0n+' · 스파크=수동상태(크롤0)</div>'
+      +'<div class="sub" style="margin:4px 0 0">핀·P0 상단 · 중요도 수동 · 볼륨/랭크 숫자 없음</div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin:8px 0">'
       +['all','신규','추적중','상승','하락'].map(function(f){
         return '<button class="sec" data-f="'+f+'" style="padding:6px 8px;font-size:12px'+(filter===f?';border-color:#e0b552':'')+'">'+(f==='all'?'전체':f)+'</button>';
@@ -77,12 +86,17 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       return '<div style="padding:8px 0;border-bottom:1px solid #2a2438">'
         +'<div style="display:flex;justify-content:space-between;align-items:center">'
         +'<span>'+(pinned?'📌 ':'')+'<b>'+x.k+'</b> · <span style="color:'+tone+'">'+x.st+'</span>'
+        +' <span class="chip" style="'+(priOf(x)==='P0'?'color:#e0b552':'')+'">'+priOf(x)+'</span>'
         +(age!==''?' <small style="opacity:.5">'+age+'d</small>':'')+'</span>'
         +'<span>'
         +'<button class="sec" data-pin="'+real+'" style="padding:4px 8px;margin-right:4px">핀</button>'
         +'<button class="sec" data-cycle="'+real+'" style="padding:4px 8px;margin-right:4px">상태</button>'
         +'<button class="sec" data-i="'+real+'" style="padding:4px 8px">삭제</button></span></div>'
         +(x.note?'<div class="sub" style="margin-top:4px">'+String(x.note).replace(/</g,'&lt;')+'</div>':'')
+        +'<div class="row" style="flex-wrap:wrap;gap:4px;margin-top:6px">'+['P0','P1','P2'].map(function(p){
+          var on=priOf(x)===p;
+          return '<button type="button" class="sec" data-pri="'+real+'" data-pv="'+p+'" style="padding:4px 8px;font-size:11px;border-radius:999px'+(on?';border-color:#e0b552;color:#e0b552':'')+'">'+p+'</button>';
+        }).join('')+'</div>'
         +'<div data-spark="'+real+'" style="margin-top:6px;cursor:pointer;display:flex;align-items:flex-end;gap:8px;min-height:24px">'
         +sparkBars(x)
         +(sparkOpen===real
@@ -121,7 +135,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
         raw.split('\n').forEach(function(line){
           var p=line.split('|'); if(!p[0])return;
           var st0=(p[1]||'추적중').trim(); var t0=Date.now();
-          s.kw.push({k:p[0].trim(),st:st0,note:(p[2]||'').trim(),t:t0,hist:[{st:st0,t:t0}]});
+          s.kw.push({k:p[0].trim(),st:st0,note:(p[2]||'').trim(),t:t0,hist:[{st:st0,t:t0}],pri:'P2'});
         });
         save(s); bumpStreak(); render(); try{legionTrack('activate',{import:1})}catch(e){}
       };
@@ -129,7 +143,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
     }
     document.getElementById('add').onclick=function(){
       var stA=document.getElementById('st').value, tA=Date.now();
-      s.kw.push({k:document.getElementById('k').value||'keyword',st:stA,note:document.getElementById('note').value||'',t:tA,hist:[{st:stA,t:tA}]});
+      s.kw.push({k:document.getElementById('k').value||'keyword',st:stA,note:document.getElementById('note').value||'',t:tA,hist:[{st:stA,t:tA}],pri:'P2'});
       save(s); bumpStreak(); render(); try{legionTrack('activate',{})}catch(e){}
     };
     var order=['신규','추적중','상승','하락'];
@@ -140,6 +154,14 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
         pushHist(item, prev);
         save(s); bumpStreak(); render();
         try{legionTrack('status_cycle',{st:item.st})}catch(e){}
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pri]'),function(b){
+      b.onclick=function(){
+        var item=s.kw[+b.getAttribute('data-pri')]; if(!item)return;
+        item.pri=b.getAttribute('data-pv');
+        save(s); render();
+        try{legionTrack('pri',{pri:item.pri})}catch(e){}
       };
     });
     document.querySelectorAll('[data-pin]').forEach(function(b){
