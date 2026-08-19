@@ -78,6 +78,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   /* WAVE158: 플래시 중 재탭=재플래시. 700ms 재시작 · 크롤/점유율 숫자 0 */
   /* WAVE164: 플래시 줄 탭=맨위 유지. 스크롤만 · 크롤/점유율 숫자 0 */
   /* WAVE169: 플래시 줄 탭=플래시 끄기. 맨위 유지 다음 · 크롤/점유율 숫자 0 */
+  /* WAVE173: 끈 뒤 목록 포커스. 포커스만 · 크롤/점유율 숫자 0 */
   var listFlashOn=false;
   var listFlashTok=0;
   var listFlashRetr=false;
@@ -85,6 +86,15 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   function listFlashMs(){ return 700; }
   function listFlashCss(){
     return 'margin:0 0 8px;padding:6px 8px;border-radius:8px;border:1px solid #e0b552;color:#e0b552;font-size:12px;cursor:pointer';
+  }
+  function listFocusId(){ return 'list'; }
+  function focusList(){
+    var el=typeof document!=='undefined'?document.getElementById(listFocusId()):null;
+    if(!el) return false;
+    try{ if(!el.hasAttribute||!el.hasAttribute('tabindex')) el.setAttribute('tabindex','-1'); }catch(e0){}
+    try{ if(el.focus) el.focus(); }catch(e1){}
+    if(el.setAttribute) el.setAttribute('data-focus-after-kill','1');
+    return true;
   }
   function killListFlash(){
     listFlashTok++;
@@ -97,6 +107,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       e.setAttribute('data-reflash','0');
       e.setAttribute('data-flash-off','1');
     }
+    focusList();
   }
   function bindListFlashTap(){
     var el=typeof document!=='undefined'?document.getElementById('listFlash'):null;
