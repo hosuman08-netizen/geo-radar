@@ -109,6 +109,14 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       el.setAttribute('data-re-ring','0');
     }
   }
+  function holdListFocus(){
+    var el=typeof document!=='undefined'?document.getElementById(listFocusId()):null;
+    if(!el) return false;
+    try{ if(!el.hasAttribute||!el.hasAttribute('tabindex')) el.setAttribute('tabindex','-1'); }catch(e0){}
+    try{ if(el.focus) el.focus(); }catch(e1){}
+    if(el.setAttribute) el.setAttribute('data-focus-after-kill','1');
+    return true;
+  }
   function killListFocusRing(){
     listRingTok++;
     listRingOn=false;
@@ -118,6 +126,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       e.setAttribute('data-ring-off','1');
       e.setAttribute('data-ring-tap','1');
     }
+    holdListFocus();
   }
   function bindListRingTap(){
     var el=typeof document!=='undefined'?document.getElementById(listFocusId()):null;
