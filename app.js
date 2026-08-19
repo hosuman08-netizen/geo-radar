@@ -62,6 +62,12 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
   function hdrChip(f, lab, on){
     return '<button type="button" class="sec" data-f="'+f+'" style="padding:4px 8px;font-size:11px;border-radius:999px'+(on?';border-color:#e0b552;color:#e0b552':'')+'">'+lab+'</button>';
   }
+  /* WAVE141: 같은 칩 재탭=전체. 필터 라벨만 · 크롤/점유율 숫자 0 */
+  function chipRetap(cur, next){
+    if(!next || FILTERS.indexOf(next)<0) return cur||'all';
+    if(cur===next && next!=='all') return 'all';
+    return next;
+  }
   if(!s.kw.length){ s.kw=[{k:'맥 월페이퍼',st:'신규',t:Date.now(),note:'',hist:[{st:'신규',t:Date.now()}]},{k:'사주 운세',st:'추적중',t:Date.now(),note:'',hist:[{st:'추적중',t:Date.now()}]},{k:'브라우저 게임',st:'상승',t:Date.now(),note:'',hist:[{st:'상승',t:Date.now()}]}]; save(s); }
   (function(){var dirty=false;(s.kw||[]).forEach(function(x){if(!x.hist||!x.hist.length){x.hist=[{st:x.st,t:x.t||Date.now()}];dirty=true;}if(x.hist.length>14){x.hist=x.hist.slice(-14);dirty=true;}if(x.pri!=='P0'&&x.pri!=='P1'&&x.pri!=='P2'){x.pri='P2';dirty=true;}});if(dirty)save(s);})();
   function render(){
@@ -90,7 +96,7 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       +hdrChip('pin','핀 '+pn.length,filter==='pin')
       +hdrChip('ours','ours '+oursN,filter==='ours')
       +hdrChip('comp','comp '+compN,filter==='comp')
-      +'<span class="sub" style="margin:0">헤더칩=필터 · 점유율/랭크 숫자 없음</span></div>'
+      +'<span class="sub" style="margin:0">헤더칩=필터 · 재탭=전체 · 점유율/랭크 숫자 없음</span></div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin:8px 0">'
       +['all','pin','ours','comp','신규','추적중','상승','하락'].map(function(f){
         var lab=f==='all'?'전체':f==='pin'?'핀 '+pn.length:f==='ours'?'ours '+oursN:f==='comp'?'comp '+compN:f;
@@ -136,7 +142,11 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
         +'</div>';
     }).join(''):'<span class="sub">키워드 없음'+(filter==='pin'?' (핀 없음 · 필터 유지)':(filter==='ours'?' (ours 메모 없음 · 필터 유지)':(filter==='comp'?' (comp 메모 없음 · 필터 유지)':(filter!=='all'?' (필터: '+filter+')':''))))+'</span>';
     Array.prototype.forEach.call(document.querySelectorAll('[data-f]'),function(b){
-      b.onclick=function(){filter=b.getAttribute('data-f'); localStorage.setItem('geo_filter',filter); render();};
+      b.onclick=function(){
+        filter=chipRetap(filter, b.getAttribute('data-f'));
+        localStorage.setItem('geo_filter',filter);
+        render();
+      };
     });
     if(!document.getElementById('clearAll')){
       var c=document.createElement('button'); c.id='clearAll'; c.textContent='목록 비우기'; c.style.cssText='width:100%;margin-top:6px;padding:10px;border:0;border-radius:10px;background:#1c1826;color:#8a8398';
