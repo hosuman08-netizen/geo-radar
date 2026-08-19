@@ -74,6 +74,24 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
     var el=document.getElementById('list');
     if(el){ try{ el.scrollIntoView({block:'start'}); }catch(e){} }
   }
+  /* WAVE155: 맨위 플래시 1줄. 스크롤 확인만 · 크롤/점유율 숫자 0 */
+  var listFlashOn=false;
+  var listFlashTok=0;
+  function listFlashLine(){ return '맨위'; }
+  function listFlashMs(){ return 700; }
+  function listFlashCss(){
+    return 'margin:0 0 8px;padding:6px 8px;border-radius:8px;border:1px solid #e0b552;color:#e0b552;font-size:12px';
+  }
+  function armListFlash(){
+    listFlashOn=true;
+    var tok=++listFlashTok;
+    setTimeout(function(){
+      if(tok!==listFlashTok) return;
+      listFlashOn=false;
+      var e=document.getElementById('listFlash');
+      if(e){ e.style.display='none'; e.setAttribute('data-flash','0'); }
+    }, listFlashMs());
+  }
   if(!s.kw.length){ s.kw=[{k:'맥 월페이퍼',st:'신규',t:Date.now(),note:'',hist:[{st:'신규',t:Date.now()}]},{k:'사주 운세',st:'추적중',t:Date.now(),note:'',hist:[{st:'추적중',t:Date.now()}]},{k:'브라우저 게임',st:'상승',t:Date.now(),note:'',hist:[{st:'상승',t:Date.now()}]}]; save(s); }
   (function(){var dirty=false;(s.kw||[]).forEach(function(x){if(!x.hist||!x.hist.length){x.hist=[{st:x.st,t:x.t||Date.now()}];dirty=true;}if(x.hist.length>14){x.hist=x.hist.slice(-14);dirty=true;}if(x.pri!=='P0'&&x.pri!=='P1'&&x.pri!=='P2'){x.pri='P2';dirty=true;}});if(dirty)save(s);})();
   function render(){
@@ -111,7 +129,8 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
       +'<input id="k" placeholder="키워드"/><select id="st"><option>추적중</option><option>상승</option><option>하락</option><option>신규</option></select>'
       +'<input id="note" placeholder="메모 (선택)"/>'
       +'<button id="add">추가</button></div><div class="card" id="list"></div>';
-    document.getElementById('list').innerHTML=list.length?list.map(function(x){
+    var flashHtml=listFlashOn?'<p class="sub" id="listFlash" data-flash="1" style="'+listFlashCss()+'">'+listFlashLine()+'</p>':'';
+    document.getElementById('list').innerHTML=flashHtml+(list.length?list.map(function(x){
       var real=s.kw.indexOf(x);
       var tone=x.st==='상승'?'#4ade80':x.st==='하락'?'#f87171':x.st==='신규'?'#67e8f9':'#ece8f1';
       var pinned=pn.indexOf(x.k)>=0;
@@ -146,13 +165,14 @@ try{localStorage.setItem('geo_checks',(+(localStorage.getItem('geo_checks')||0)+
           :'<span class="sub">상태 7칸 · 탭=라벨</span>')
         +'</div>'
         +'</div>';
-    }).join(''):'<span class="sub">키워드 없음'+(filter==='pin'?' (핀 없음 · 필터 유지)':(filter==='ours'?' (ours 메모 없음 · 필터 유지)':(filter==='comp'?' (comp 메모 없음 · 필터 유지)':(filter!=='all'?' (필터: '+filter+')':''))))+'</span>';
+    }).join(''):'<span class="sub">키워드 없음'+(filter==='pin'?' (핀 없음 · 필터 유지)':(filter==='ours'?' (ours 메모 없음 · 필터 유지)':(filter==='comp'?' (comp 메모 없음 · 필터 유지)':(filter!=='all'?' (필터: '+filter+')':''))))+'</span>');
     Array.prototype.forEach.call(document.querySelectorAll('[data-f]'),function(b){
       b.onclick=function(){
         var next=b.getAttribute('data-f');
         var retap=(filter===next && next!=='all');
         filter=chipRetap(filter, next);
         localStorage.setItem('geo_filter',filter);
+        if(retap) armListFlash();
         render();
         if(retap) listToTop();
       };
